@@ -3,6 +3,7 @@
     "displayName": "CMS Combine Datacard",
     "description": "Syntax highlighting for CMS Combine datacards.",
     "version": "0.0.1",
+    "icon": "images/logo.png",
     "publisher": "TomRunting",
     "repository": {
         "type": "git",
