@@ -1,6 +1,6 @@
 # Syntax highlighting for datacards for the [CMS Combine](https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/latest/) tool
 
-## Features :sparkles:
+## Features ✨
 
 - Syntax highlighting for keywords and numbers
 
@@ -10,7 +10,7 @@
 
     ![1742490518036](images/datacard_fold.gif)
 
-## Coming soon :soon:
+## Coming soon 🔜
 
 - Tell the difference between a general `.txt` file and a datacard
 - Auto-commenting
@@ -20,7 +20,7 @@
 - Breadcrumbs for datacard sections
 - Sticky scrolling for table headings
 
-## Installation :computer:
+## Installation 🧑‍💻️
 
 To install this extension from the marketplace, launch `VSCode`, press `Ctrl+P` and paste the following:
 
