@@ -2,7 +2,7 @@
     "name": "cms-combine-datacard",
     "displayName": "CMS Combine Datacard",
     "description": "Syntax highlighting for CMS Combine datacards.",
-    "version": "0.0.3",
+    "version": "0.1.0",
     "categories": [
         "Data Science"
     ],
@@ -15,9 +15,7 @@
     "engines": {
         "vscode": "^1.75.0"
     },
-    "activationEvents": [
-        
-    ],
+    "activationEvents": [],
     "main": "./src/extension.js",
     "contributes": {
         "languages": [
