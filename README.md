@@ -13,5 +13,5 @@ To build and install this extension locally:
 ```bash
 npm install --save-dev @vscode/vsce
 npx vsce package
-code --install-extension cms-combine-datacard-0.0.1.vsix 
+code --install-extension cms-combine-datacard-<version>.vsix 
 ```
