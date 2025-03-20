@@ -2,7 +2,7 @@
     "name": "cms-combine-datacard",
     "displayName": "CMS Combine Datacard",
     "description": "Syntax highlighting for CMS Combine datacards.",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "icon": "https://raw.githubusercontent.com/cms-analysis/HiggsAnalysis-CombinedLimit/refs/heads/main/docs/logo.png",
     "publisher": "TomRunting",
     "repository": {
