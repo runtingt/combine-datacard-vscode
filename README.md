@@ -2,7 +2,13 @@
 
 ## Installation
 
-To install this extension locally:
+To install this extension from the marketplace, launch `VSCode`, press `Ctrl+P` and paste the following:
+
+```bash
+ext install cms-combine-datacard
+```
+
+To build and install this extension locally:
 
 ```bash
 npm install --save-dev @vscode/vsce

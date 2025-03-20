@@ -3,7 +3,11 @@
     "displayName": "CMS Combine Datacard",
     "description": "Syntax highlighting for CMS Combine datacards.",
     "version": "0.0.1",
-    "publisher": "your-name",
+    "publisher": "TomRunting",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/runtingt/combine-datacard-vscode.git"
+    },
     "engines": {
         "vscode": "^1.75.0"
     },
