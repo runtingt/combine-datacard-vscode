@@ -2,7 +2,7 @@
 
 ## Installation
 
-To install this extension localy:
+To install this extension locally:
 
 ```bash
 npm install --save-dev @vscode/vsce
