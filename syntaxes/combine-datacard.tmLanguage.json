@@ -3,7 +3,7 @@
     "patterns": [
         {
             "name": "keyword.combine-datacard",
-            "match": "\\b(observation|bin|process|rate|lumi|shape|kmax|imax|jmax|systematics)\\b"
+            "match": "\\b(observation|bin|process|rate|shape|kmax|imax|jmax)\\b"
         },
         {
             "name": "comment.combine-datacard",
