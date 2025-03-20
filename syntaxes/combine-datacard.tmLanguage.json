@@ -10,7 +10,7 @@
             "match": "#.*"
         },
         {
-            "name": "number.combine-datacard",
+            "name": "constant.numeric.combine-datacard",
             "match": "-?\\b\\d+(?:\\.\\d+)?(?:[eE][-+]?\\d+)?\\b"
         }
     ]

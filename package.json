@@ -15,14 +15,11 @@
     "engines": {
         "vscode": "^1.75.0"
     },
+    "activationEvents": [
+        
+    ],
+    "main": "./src/extension.js",
     "contributes": {
-        "grammars": [
-            {
-                "language": "combine-datacard",
-                "scopeName": "source.combine-datacard",
-                "path": "./syntaxes/combine-datacard.tmLanguage.json"
-            }
-        ],
         "languages": [
             {
                 "id": "combine-datacard",
@@ -34,6 +31,13 @@
                     ".txt"
                 ],
                 "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "combine-datacard",
+                "scopeName": "source.combine-datacard",
+                "path": "./syntaxes/combine-datacard.tmLanguage.json"
             }
         ]
     },
