@@ -1,0 +1,17 @@
+{
+    "scopeName": "source.combine-datacard",
+    "patterns": [
+        {
+            "name": "keyword.combine-datacard",
+            "match": "\\b(observation|bin|process|rate|lumi|shape|kmax|imax|jmax|systematics)\\b"
+        },
+        {
+            "name": "comment.combine-datacard",
+            "match": "#.*"
+        },
+        {
+            "name": "number.combine-datacard",
+            "match": "-?\\b\\d+(?:\\.\\d+)?(?:[eE][-+]?\\d+)?\\b"
+        }
+    ]
+}

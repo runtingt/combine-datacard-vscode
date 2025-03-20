@@ -1,0 +1,35 @@
+{
+    "name": "cms-combine-datacard",
+    "displayName": "CMS Combine Datacard",
+    "description": "Syntax highlighting for CMS Combine datacards.",
+    "version": "0.0.1",
+    "publisher": "your-name",
+    "engines": {
+        "vscode": "^1.75.0"
+    },
+    "contributes": {
+        "grammars": [
+            {
+                "language": "combine-datacard",
+                "scopeName": "source.combine-datacard",
+                "path": "./syntaxes/combine-datacard.tmLanguage.json"
+            }
+        ],
+        "languages": [
+            {
+                "id": "combine-datacard",
+                "aliases": [
+                    "CombineDatacard",
+                    "combine-datacard"
+                ],
+                "extensions": [
+                    ".txt"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ]
+    },
+    "devDependencies": {
+        "@vscode/vsce": "^3.3.0"
+    }
+}
