@@ -15,7 +15,9 @@
     "engines": {
         "vscode": "^1.75.0"
     },
-    "activationEvents": [],
+    "activationEvents": [
+        "onLanguage:plaintext"
+    ],
     "main": "./src/extension.js",
     "contributes": {
         "languages": [
@@ -24,9 +26,6 @@
                 "aliases": [
                     "CombineDatacard",
                     "combine-datacard"
-                ],
-                "extensions": [
-                    ".txt"
                 ],
                 "configuration": "./language-configuration.json"
             }

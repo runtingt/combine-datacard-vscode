@@ -1,7 +1,44 @@
 const vscode = require('vscode');
 
+function detectDatacard(document) {
+    const firstThreeLines = document.getText(new vscode.Range(0, 0, 3, 0)).split('\n');
+    const isDatacard = firstThreeLines[0]?.startsWith('imax') &&
+                       firstThreeLines[1]?.startsWith('jmax') &&
+                       firstThreeLines[2]?.startsWith('kmax');
+    console.log(firstThreeLines);
+    console.log('Is datacard:', isDatacard);
+    if (isDatacard) {
+        vscode.languages.setTextDocumentLanguage(document, 'combine-datacard');
+        console.log('Datacard detected and language set to combine-datacard');
+    } else {
+        console.log('This file does not appear to be a datacard.');
+    }
+}
+
 function activate(context) {
-    console.log('CombineCardMate extension activated');
+    console.log('CombineDatacard extension activated');
+
+    // Listen for opened text documents
+    vscode.workspace.onDidOpenTextDocument(document => {
+        console.log('Opened document:', document.fileName);
+        console.log('Language ID:', document.languageId);
+        // Check if the file is a plain text file
+        if (document.languageId === 'plaintext' && document.fileName.endsWith('.txt')) {
+            console.log('Checking if this is a datacard...');
+            detectDatacard(document);
+        }
+    });
+
+    // Process any already open documents
+    vscode.workspace.textDocuments.forEach(document => {
+        console.log('Open document:', document.fileName);
+        console.log('Language ID:', document.languageId);
+        // Check if the file is a plain text file
+        if (document.languageId === 'plaintext' && document.fileName.endsWith('.txt')) {
+            console.log('Checking if this is a datacard...');
+            detectDatacard(document);
+        }
+    });
 
     // Register the folding range provider for combine-datacard files
     context.subscriptions.push(
