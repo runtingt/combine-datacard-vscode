@@ -12,7 +12,6 @@
 
 ## Coming soon 🔜
 
-- Tell the difference between a general `.txt` file and a datacard
 - Auto-commenting
 - Auto section closing
 - IntelliSense for datacard keywords
