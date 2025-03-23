@@ -10,7 +10,7 @@ function detectDatacard(document) {
     if (isDatacard) {
         vscode.languages.setTextDocumentLanguage(document, 'combine-datacard');
         console.log('Datacard detected and language set to combine-datacard');
-   D } else {
+    } else {
         console.log('This file does not appear to be a datacard.');
     }
 }

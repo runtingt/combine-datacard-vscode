@@ -27,7 +27,7 @@
                     "CombineDatacard",
                     "combine-datacard"
                 ],
-                "configuration": "./language-configuration.json"
+                "configuration": "./language_configuration.json"
             }
         ],
         "grammars": [
