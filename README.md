@@ -12,7 +12,6 @@
 
 ## Coming soon 🔜
 
-- Auto-commenting
 - Auto section closing
 - IntelliSense for datacard keywords
 - Auto-aligning table columns
