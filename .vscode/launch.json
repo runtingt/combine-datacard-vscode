@@ -8,8 +8,7 @@
         "runtimeExecutable": "${execPath}",
         "args": [
           "--extensionDevelopmentPath=${workspaceFolder}",
-          "--disable-extension=**/!(*theme*)",
-          "--disable-extension=vscode.*/!(*theme*)"
+          "--disable-extensions"
         ],
         "outFiles": [
           "${workspaceFolder}/out/**/*.js"

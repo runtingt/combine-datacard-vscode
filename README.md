@@ -4,7 +4,7 @@
 
 - Semantic syntax highlighting for keywords and numbers
 
-    ![1742490518036](images/datacard_highlight_semantic.png)
+    ![1742490518036](images/datacard_highlight_semantic.gif)
 
 - Fold blocks within datacards
 
