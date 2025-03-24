@@ -1,10 +1,10 @@
-# Syntax highlighting for datacards for the [CMS Combine](https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/latest/) tool
+# VSCode extension for datacards from the [CMS Combine](https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/latest/) tool
 
 ## Features ✨
 
-- Syntax highlighting for keywords and numbers
+- Semantic syntax highlighting for keywords and numbers
 
-    ![1742490518036](images/datacard_highlight.png)
+    ![1742490518036](images/datacard_highlight_semantic.png)
 
 - Fold blocks within datacards
 
