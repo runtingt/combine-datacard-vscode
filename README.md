@@ -10,13 +10,21 @@
 
     ![1742490518036](images/datacard_fold.gif)
 
+- Comment toggling
+
+    ![1742490518036](images/datacard_comment.gif)
+
+- Context-aware suggestions for keywords and section dividers
+
+    ![1742490518036](images/datacard_suggestions.gif)
+
 ## Coming soon 🔜
 
-- Auto section closing
-- IntelliSense for datacard keywords
-- Auto-aligning table columns
+- Tooltips for keywords
 - Breadcrumbs for datacard sections
+- Auto-aligning table columns
 - Sticky scrolling for table headings
+<!-- - Use the CombineHarvester `ValidateDatacards.py` tool to validate datacards on-the-fly -->
 
 ## Installation 🧑‍💻️
 

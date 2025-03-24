@@ -1,4 +1,28 @@
 const vscode = require('vscode');
+const fs = require('fs');
+const path = require('path');
+
+let keywords = [];
+function loadKeywords(context) {
+    const grammarPath = path.join(context.extensionPath, 'syntaxes', 'combine-datacard.tmLanguage.json');
+    try {
+        // Extract keywords from the grammar file
+        const grammar = JSON.parse(fs.readFileSync(grammarPath, 'utf8'));
+        const keywordPattern = grammar.patterns.find(pattern => pattern.name === "keyword.combine-datacard");
+        if (keywordPattern && keywordPattern.match) {
+            const keywordRegex = /(?:\(|\|)(\w+)(?=\||\))/g;
+            let match;
+            while ((match = keywordRegex.exec(keywordPattern.match)) !== null) {
+                keywords.push(match[1]);
+            }
+        }
+        console.log('Loaded keywords:', keywords);
+
+    } catch (error) {
+        console.error('Error loading grammar file:', error);
+        console.error('Tried to load:', grammarPath);
+    }
+}
 
 function detectDatacard(document) {
     const firstThreeLines = document.getText(new vscode.Range(0, 0, 3, 0)).split('\n');
@@ -17,6 +41,7 @@ function detectDatacard(document) {
 
 function activate(context) {
     console.log('CombineDatacard extension activated');
+    loadKeywords(context);
 
     // Listen for opened text documents
     vscode.workspace.onDidOpenTextDocument(document => {
@@ -47,6 +72,18 @@ function activate(context) {
             new CombineFoldingRangeProvider()
         )
     );
+
+    // Register the completion item provider for combine-datacard files
+    context.subscriptions.push(
+        vscode.languages.registerCompletionItemProvider(
+            { language: 'combine-datacard' },
+            new CombineCompletionItemProvider(),
+            ' ', // trigger on space
+            '-', // trigger on dash
+            '\n', // trigger on newline
+            ...keywords, // trigger on keywords
+        )
+    );
 }
 
 class CombineFoldingRangeProvider {
@@ -72,6 +109,70 @@ class CombineFoldingRangeProvider {
             }
         }
         return foldingRanges;
+    }
+}
+
+class CombineCompletionItemProvider {
+    provideCompletionItems(document, position, token, context) {
+        const completions = [];
+        const linePrefix = document.lineAt(position).text.substring(0, position.character);
+        const currentLineText = document.lineAt(position).text.trim();
+        
+        // Suggest completions for keywords
+        keywords.forEach(kw => {
+            const item = new vscode.CompletionItem(kw, vscode.CompletionItemKind.Keyword);
+            item.detail = `Datacard keyword: ${kw}`;
+            completions.push(item);
+        });
+
+        // Find the most recent marker line
+        let lastMarkerLine = -1;
+        let lastMarkerLength = 0;
+        for (let i = position.line - 1; i >= 0; i--) {
+            const lineText = document.lineAt(i).text.trim();
+            const dashMatch = lineText.match(/^(-{3,})$/);
+            if (dashMatch) {
+                lastMarkerLine = i;
+                lastMarkerLength = dashMatch[1].length;
+                break;
+            }
+        }
+
+        // Don't suggest anything if the line is already a complete marker
+        if (/^-{3,}$/.test(currentLineText)) {
+            return completions;
+        }
+
+        // If the user is typing dashes (but not enough to be a complete marker)
+        const dashPrefixMatch = linePrefix.trim().match(/^(-{1,2})$/);
+        if (dashPrefixMatch && lastMarkerLength > 0) {
+            const existingDashes = dashPrefixMatch[1].length;
+            const remainingDashes = lastMarkerLength - existingDashes;
+
+            if (remainingDashes > 0) {
+                const markerCompletion = new vscode.CompletionItem(
+                    `Complete divider (${lastMarkerLength} -'s)`,
+                    vscode.CompletionItemKind.Snippet
+                );
+                markerCompletion.insertText = '-'.repeat(remainingDashes);
+                markerCompletion.detail = `Complete marker with ${remainingDashes} more -'s`;
+                markerCompletion.filterText = '-'.repeat(existingDashes);
+                completions.push(markerCompletion);
+            }
+        }
+
+        // Suggest adding a full marker if we have a reference and not currently typing dashes
+        else if (lastMarkerLine >= 0 && !linePrefix.trim().startsWith('-')) {
+            const closingMarker = new vscode.CompletionItem(
+                `Add divider: ${lastMarkerLength} -'s`,
+                vscode.CompletionItemKind.Snippet
+            );
+            closingMarker.insertText = '-'.repeat(lastMarkerLength);
+            closingMarker.detail = `Add divider: ${lastMarkerLength} -'s`;
+            completions.push(closingMarker);
+        }
+
+        return completions;
     }
 }
 
