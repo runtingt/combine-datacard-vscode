@@ -148,13 +148,44 @@ function getSectionIndex(document, lineNumber) {
         }
     }
 
-    // Find all section start/end indices
+    // Find all section start/end indices and check if sections are blank
     const dashRegex = /^[-]{3,}$/;
     let dashedLineNumbers = [];
+    let nonBlankSections = [];
+
     for (let i = 0; i < document.lineCount; i++) {
         const lineText = document.lineAt(i).text.trim();
         if (dashRegex.test(lineText)) {
             dashedLineNumbers.push(i);
+        }
+    }
+
+    // Identify non-blank sections
+    for (let i = 0; i < dashedLineNumbers.length - 1; i++) {
+        let isBlank = true;
+        // Check if section has any non-whitespace content
+        for (let j = dashedLineNumbers[i] + 1; j < dashedLineNumbers[i + 1]; j++) {
+            if (j < document.lineCount && document.lineAt(j).text.trim().length > 0) {
+                isBlank = false;
+                break;
+            }
+        }
+        if (!isBlank) {
+            nonBlankSections.push(i);
+        }
+    }
+
+    // Check the last section (after last dash line)
+    if (dashedLineNumbers.length > 0) {
+        let isLastSectionBlank = true;
+        for (let j = dashedLineNumbers[dashedLineNumbers.length - 1] + 1; j < document.lineCount; j++) {
+            if (document.lineAt(j).text.trim().length > 0) {
+                isLastSectionBlank = false;
+                break;
+            }
+        }
+        if (!isLastSectionBlank) {
+            nonBlankSections.push(dashedLineNumbers.length - 1);
         }
     }
 
@@ -163,7 +194,8 @@ function getSectionIndex(document, lineNumber) {
     if (headerStart >= 0) {
         for (let i = 0; i < dashedLineNumbers.length; i++) {
             if (headerStart > dashedLineNumbers[i]) {
-                headerSectionIndex = i + 1;
+                // Count how many non-blank sections we've seen up to this point
+                headerSectionIndex = nonBlankSections.filter(s => s < i).length + 1;
             } else {
                 break;
             }
@@ -174,7 +206,8 @@ function getSectionIndex(document, lineNumber) {
     let section = 0;
     for (let i = 0; i < dashedLineNumbers.length; i++) {
         if (lineNumber > dashedLineNumbers[i]) {
-            section = i + 1;
+            // Get the count of non-blank sections up to this point
+            section = nonBlankSections.filter(s => s < i).length + 1;
         } else {
             break;
         }
@@ -184,7 +217,8 @@ function getSectionIndex(document, lineNumber) {
     return { 
         section: section, 
         isPreHeader: isPreHeader,
-        headerSectionIndex: headerSectionIndex
+        headerSectionIndex: headerSectionIndex,
+        nonBlankSections: nonBlankSections
     };
 }
 
