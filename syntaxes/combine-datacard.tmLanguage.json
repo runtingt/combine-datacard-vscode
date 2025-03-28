@@ -12,7 +12,7 @@
         },
         {
             "name": "keyword.combine-datacard",
-            "match": "\\b(observation|bin|process|rate|shape|shapes|kmax|imax|jmax|lnN|lnU|gmN|rateParam|discrete|nuissance)\\b"
+            "match": "\\b(observation|bin|process|rate|shape|shapes|kmax|imax|jmax|lnN|lnU|gmN|rateParam|discrete|nuisance|edit|freeze)\\b"
         },
         {
             "name": "comment.combine-datacard",
