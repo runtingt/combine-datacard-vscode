@@ -2,10 +2,6 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 
-const tokenTypes = ['keyword', 'variable', 'number'];
-const tokenModifiers = [];
-const legend = new vscode.SemanticTokensLegend(tokenTypes, tokenModifiers);
-
 let keywords = [];
 function loadKeywords(context) {
     const grammarPath = path.join(context.extensionPath, 'syntaxes', 'combine-datacard.tmLanguage.json');
@@ -29,11 +25,20 @@ function loadKeywords(context) {
 }
 
 function detectDatacard(document) {
-    const firstThreeLines = document.getText(new vscode.Range(0, 0, 3, 0)).split('\n');
-    const isDatacard = firstThreeLines[0]?.startsWith('imax') &&
-                       firstThreeLines[1]?.startsWith('jmax') &&
-                       firstThreeLines[2]?.startsWith('kmax');
-    console.log(firstThreeLines);
+    // Get all lines in the document
+    const allLines = document.getText().split('\n');
+    let isDatacard = false;
+
+    // Check for three consecutive lines with the pattern anywhere in the document
+    for (let i = 0; i <= allLines.length - 3; i++) {
+        if (allLines[i].trim().startsWith('imax') && 
+            allLines[i + 1].trim().startsWith('jmax') && 
+            allLines[i + 2].trim().startsWith('kmax')) {
+            isDatacard = true;
+            break;
+        }
+    }
+
     console.log('Is datacard:', isDatacard);
     if (isDatacard) {
         vscode.languages.setTextDocumentLanguage(document, 'combine-datacard');
@@ -69,11 +74,17 @@ function activate(context) {
             }
             // Check datacard files that might no longer be datacards
             else if (document.languageId === 'combine-datacard') {
-                const firstThreeLines = document.getText(new vscode.Range(0, 0, 3, 0)).split('\n');
-                const isDatacard = firstThreeLines[0]?.startsWith('imax') &&
-                                   firstThreeLines[1]?.startsWith('jmax') &&
-                                   firstThreeLines[2]?.startsWith('kmax');
-                
+                const allLines = document.getText().split('\n');
+                let isDatacard = false;
+                for (let i = 0; i <= allLines.length - 3; i++) {
+                    if (allLines[i].trim().startsWith('imax') && 
+                        allLines[i + 1].trim().startsWith('jmax') && 
+                        allLines[i + 2].trim().startsWith('kmax')) {
+                        isDatacard = true;
+                        break;
+                    }
+                }
+
                 if (!isDatacard) {
                     console.log('File no longer matches datacard format, reverting to plaintext');
                     vscode.languages.setTextDocumentLanguage(document, 'plaintext');
@@ -126,13 +137,36 @@ function hasShapeSection(document) {
 }
 
 function getSectionIndex(document, lineNumber) {
-    // Find all dashed line indices
+    // Find the imax/jmax/kmax block
+    let headerStart = -1;
+    for (let i = 0; i <= document.lineCount - 3; i++) {
+        if (document.lineAt(i).text.trim().startsWith('imax') && 
+            document.lineAt(i+1).text.trim().startsWith('jmax') && 
+            document.lineAt(i+2).text.trim().startsWith('kmax')) {
+            headerStart = i;
+            break;
+        }
+    }
+
+    // Find all section start/end indices
     const dashRegex = /^[-]{3,}$/;
     let dashedLineNumbers = [];
     for (let i = 0; i < document.lineCount; i++) {
         const lineText = document.lineAt(i).text.trim();
         if (dashRegex.test(lineText)) {
             dashedLineNumbers.push(i);
+        }
+    }
+
+    // Determine which section contains the header
+    let headerSectionIndex = 0; // Default to first section
+    if (headerStart >= 0) {
+        for (let i = 0; i < dashedLineNumbers.length; i++) {
+            if (headerStart > dashedLineNumbers[i]) {
+                headerSectionIndex = i + 1;
+            } else {
+                break;
+            }
         }
     }
 
@@ -145,7 +179,13 @@ function getSectionIndex(document, lineNumber) {
             break;
         }
     }
-    return section;
+
+    const isPreHeader = headerStart > 0 && lineNumber < headerStart;
+    return { 
+        section: section, 
+        isPreHeader: isPreHeader,
+        headerSectionIndex: headerSectionIndex
+    };
 }
 
 class CombineFoldingRangeProvider {
@@ -179,22 +219,35 @@ class CombineCompletionItemProvider {
         const completions = [];
         const linePrefix = document.lineAt(position).text.substring(0, position.character);
         const currentLineText = document.lineAt(position).text.trim();
-        const currentSection = getSectionIndex(document, position.line);
+        const sectionInfo = getSectionIndex(document, position.line);
         const hasShape = hasShapeSection(document);
 
         // Get context-specific keywords
         let contextKeywords = [];
         let adjustedSection;
-        if (hasShape) {
-            adjustedSection = currentSection;
+        console.log(sectionInfo)
+        if (sectionInfo.isPreHeader) {
+            adjustedSection = -1; // Pre-header section
         } else {
-            if (currentSection === 0) {
-                adjustedSection = 0;  // Header stays as header
+            const relativeSection = sectionInfo.section - sectionInfo.headerSectionIndex;
+            console.log('Relative section:', relativeSection);
+            if (hasShape) {
+                adjustedSection = relativeSection;
             } else {
-                adjustedSection = currentSection + 1;
+                // If no shapes section, adjust numbering
+                if (relativeSection === 0) {
+                    adjustedSection = relativeSection; // Header
+                } else {
+                    adjustedSection = relativeSection + sectionInfo.headerSectionIndex + 1;
+                }
             }
         }
+        console.log('Adjusted section:', adjustedSection);
         switch (adjustedSection) {
+            case -1: // pre-header (comments, title, etc)
+                console.log('Pre-header section');
+                contextKeywords = [];
+                break;
             case 0: // header
                 console.log('Header section');
                 contextKeywords = ['imax', 'jmax', 'kmax'];
@@ -213,7 +266,7 @@ class CombineCompletionItemProvider {
                 break;
             case 4: // systematics
                 console.log('Systematics section');
-                contextKeywords = ['lnN', 'gmN', 'lnU', 'shape'];
+                contextKeywords = ['lnN', 'gmN', 'lnU', 'shape', 'rateParam', 'discrete'];
                 break;
             default:
                 console.log('Other section');
