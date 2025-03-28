@@ -114,6 +114,17 @@ function activate(context) {
     );
 }
 
+function hasShapeSection(document) {
+    const shapesRegex = /^shapes\b/i;
+    for (let i = 0; i < document.lineCount; i++) {
+        const lineText = document.lineAt(i).text.trim();
+        if (shapesRegex.test(lineText)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function getSectionIndex(document, lineNumber) {
     // Find all dashed line indices
     const dashRegex = /^[-]{3,}$/;
@@ -169,19 +180,44 @@ class CombineCompletionItemProvider {
         const linePrefix = document.lineAt(position).text.substring(0, position.character);
         const currentLineText = document.lineAt(position).text.trim();
         const currentSection = getSectionIndex(document, position.line);
-        
-        // Get keywords relevant to the current section
+        const hasShape = hasShapeSection(document);
+
+        // Get context-specific keywords
         let contextKeywords = [];
-        if (currentSection === 0) { // header
-            contextKeywords = ['imax', 'jmax', 'kmax']
-        } else if (currentSection === 1) { // channel definition
-            contextKeywords = ['bin', 'observation']
-        } else if (currentSection === 2) { // process definition
-            contextKeywords = ['bin', 'process', 'rate']
-        } else if (currentSection === 3) { // systematics
-            contextKeywords = []
+        let adjustedSection;
+        if (hasShape) {
+            adjustedSection = currentSection;
         } else {
-            contextKeywords = [];
+            if (currentSection === 0) {
+                adjustedSection = 0;  // Header stays as header
+            } else {
+                adjustedSection = currentSection + 1;
+            }
+        }
+        switch (adjustedSection) {
+            case 0: // header
+                console.log('Header section');
+                contextKeywords = ['imax', 'jmax', 'kmax'];
+                break;
+            case 1: // shapes
+                console.log('Shapes section');
+                contextKeywords = ['shapes'];
+                break;
+            case 2: // channel definition
+                console.log('Channel definition section');
+                contextKeywords = ['bin', 'observation'];
+                break;
+            case 3: // process definition
+                console.log('Process definition section');
+                contextKeywords = ['bin', 'process', 'rate'];
+                break;
+            case 4: // systematics
+                console.log('Systematics section');
+                contextKeywords = ['lnN', 'gmN', 'lnU', 'shape'];
+                break;
+            default:
+                console.log('Other section');
+                contextKeywords = [];
         }
 
         // Sugest keywords ranked by relevance
