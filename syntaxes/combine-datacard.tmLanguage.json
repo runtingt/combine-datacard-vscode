@@ -3,7 +3,7 @@
     "patterns": [
         {
             "name": "keyword.combine-datacard",
-            "match": "\\b(observation|bin|process|rate|shape|kmax|imax|jmax|lnN|lnU|gmN)\\b"
+            "match": "\\b(observation|bin|process|rate|shape|shapes|kmax|imax|jmax|lnN|lnU|gmN)\\b"
         },
         {
             "name": "comment.combine-datacard",
@@ -20,6 +20,14 @@
         {
             "name": "entity.name.tag.combine-datacard",
             "match": "\\s([A-Za-z][A-Za-z0-9_]*)\\s"
+        },
+        {
+            "name": "constant.other.placeholder.combine-datacard",
+            "match": "\\$(PROCESS|PROCESS_\\$SYSTEMATIC|[A-Z][A-Z0-9_]*)"
+        },
+        {
+            "name": "string.unquoted.filename.combine-datacard",
+            "match": "\\b[\\w\\-\\.\\$\\{\\}/]+\\.root\\b"
         }
     ]
 }
