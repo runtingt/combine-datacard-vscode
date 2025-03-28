@@ -2,8 +2,17 @@
     "scopeName": "source.combine-datacard",
     "patterns": [
         {
+            "name": "markup.heading.separator.combine-datacard",
+            "match": "^\\s*[-]{3,}\\s*$"
+        },
+        {
+            "name": "comment.block.preheader.combine-datacard",
+            "begin": "\\A(?!\\s*[-]{3,}\\s*$)(?!\\s*imax\\b)",
+            "end": "^(?=\\s*imax\\b|\\s*[-]{3,}\\s*$)"
+        },
+        {
             "name": "keyword.combine-datacard",
-            "match": "\\b(observation|bin|process|rate|shape|shapes|kmax|imax|jmax|lnN|lnU|gmN|rateParam|discrete)\\b"
+            "match": "\\b(observation|bin|process|rate|shape|shapes|kmax|imax|jmax|lnN|lnU|gmN|rateParam|discrete|nuissance)\\b"
         },
         {
             "name": "comment.combine-datacard",
