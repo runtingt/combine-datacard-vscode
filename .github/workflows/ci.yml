@@ -2,6 +2,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*' # Run workflow on version tags (v1.0.0, etc)
   pull_request:
     branches: 
       - main
@@ -33,3 +35,45 @@ jobs:
         name: test-results-${{ runner.os }}
         path: ./out/test/**/*
         if-no-files-found: ignore
+
+  build-package:
+    if: startsWith(github.ref, 'refs/tags/')
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+    - run: npm install
+    - name: Build package
+      run: npm run package
+    - name: Upload package artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: package-${{ github.ref_name }}
+        path: |
+          *.vsix
+          dist/**
+        if-no-files-found: error
+    - name: Generate changelog
+      id: changelog
+      uses: metcalfc/changelog-generator@v4.1.0
+      with:
+        mytoken: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Release ${{ github.ref_name }}
+        body: ${{ steps.changelog.outputs.changelog }}
+        draft: false
+        prerelease: false
+        files: |
+          *.vsix
+          dist/**
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
