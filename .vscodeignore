@@ -1,3 +1,4 @@
 .gitignore
 .env
 README.md
+.mypy_cache
