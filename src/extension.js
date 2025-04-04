@@ -222,6 +222,31 @@ function getSectionIndex(document, lineNumber) {
     };
 }
 
+/**
+ * Calculate the adjusted section number based on section info and presence of shapes section
+ * @param {Object} sectionInfo The section information object
+ * @param {boolean} hasShapeSection Whether the document has a shapes section
+ * @returns {number} The adjusted section number
+ */
+function calculateAdjustedSection(sectionInfo, hasShapeSection) {
+    if (sectionInfo.isPreHeader) {
+        return -1; // Pre-header section
+    }
+    
+    const relativeSection = sectionInfo.section - sectionInfo.headerSectionIndex;
+    
+    if (hasShapeSection) {
+        return relativeSection;
+    } else {
+        // If no shapes section, adjust numbering
+        if (relativeSection === 0) {
+            return relativeSection; // Header
+        } else {
+            return relativeSection + sectionInfo.headerSectionIndex + 1;
+        }
+    }
+}
+
 class CombineFoldingRangeProvider {
     provideFoldingRanges(document, context, token) {
         const foldingRanges = [];
@@ -258,24 +283,9 @@ class CombineCompletionItemProvider {
 
         // Get context-specific keywords
         let contextKeywords = [];
-        let adjustedSection;
-        console.log(sectionInfo)
-        if (sectionInfo.isPreHeader) {
-            adjustedSection = -1; // Pre-header section
-        } else {
-            const relativeSection = sectionInfo.section - sectionInfo.headerSectionIndex;
-            console.log('Relative section:', relativeSection);
-            if (hasShape) {
-                adjustedSection = relativeSection;
-            } else {
-                // If no shapes section, adjust numbering
-                if (relativeSection === 0) {
-                    adjustedSection = relativeSection; // Header
-                } else {
-                    adjustedSection = relativeSection + sectionInfo.headerSectionIndex + 1;
-                }
-            }
-        }
+        console.log(sectionInfo);
+        
+        const adjustedSection = calculateAdjustedSection(sectionInfo, hasShape);
         console.log('Adjusted section:', adjustedSection);
         switch (adjustedSection) {
             case -1: // pre-header (comments, title, etc)
@@ -401,5 +411,11 @@ function deactivate() {}
 
 module.exports = {
     activate,
-    deactivate
+    deactivate,
+    _testing: {
+        detectDatacard,
+        getSectionIndex,
+        hasShapeSection,
+        calculateAdjustedSection
+    }
 };

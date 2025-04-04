@@ -2,6 +2,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches: 
+      - main
 
 jobs:
   build:
@@ -17,7 +20,16 @@ jobs:
       with:
         node-version: 18.x
     - run: npm install
-    - run: xvfb-run -a npm test
+    - name: Run tests (Linux)
+      run: xvfb-run -a npm test
       if: runner.os == 'Linux'
-    - run: npm test
+    - name: Run tests (Non-Linux)
+      run: npm test
       if: runner.os != 'Linux'
+    - name: Archive test results
+      uses: actions/upload-artifact@v2
+      if: success() || failure()
+      with:
+        name: test-results-${{ runner.os }}
+        path: ./out/test/**/*
+        if-no-files-found: ignore
