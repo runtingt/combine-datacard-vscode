@@ -24,6 +24,27 @@ function loadKeywords(context) {
     }
 }
 
+const keywordDefinitions = {
+    observation: "Number of observed events",
+    bin: "Label for each channel",
+    process: "Label for each process",
+    rate: "Expected event yield for channel and process",
+    shapes: "Template definition",
+    shape: "Systematic shape uncertainty",
+    imax: "Number of channels",
+    jmax: "Number processes minus 1",
+    kmax: "Number of nuisances",
+    lnN: "(Asymmetric) Log-normal uncertainty",
+    lnU: "Log-uniform uncertainty",
+    gmN: "Gamma uncertainty",
+    rateParam: "Multiplicative scale factor",
+    discrete: "Discrete nuisance parameter",
+    nuisance: "Nuisance parameter",
+    edit: "Directive to modify a nuisance",
+    freeze: "Freeze a nuisance"
+}
+
+
 function detectDatacard(document) {
     // Get all lines in the document
     const allLines = document.getText().split('\n');
@@ -123,6 +144,32 @@ function activate(context) {
             ...keywords, // trigger on keywords
         )
     );
+
+    // Register the hover provider for the 'combine-datacard' language.
+    context.subscriptions.push(
+        vscode.languages.registerHoverProvider('combine-datacard', {
+            provideHover(document, position, token) {
+                // Get the word range at the position
+                const range = document.getWordRangeAtPosition(position, /\w+/);
+                if (!range) {
+                    return;
+                }
+                const word = document.getText(range);
+                
+                // If the word is a keyword we care about, return its definition.
+                if (keywordDefinitions.hasOwnProperty(word) && keywords.includes(word)) {
+                    const definition = keywordDefinitions[word];
+                    const markdown = new vscode.MarkdownString();
+                    markdown.appendMarkdown(`**${word}**\n\n${definition}`);
+                    // Optionally, disable command links if you don't want them parsed.
+                    markdown.isTrusted = false;
+                    return new vscode.Hover(markdown, range);
+                }
+                return;
+            }
+        })
+    );
+
 }
 
 function hasShapeSection(document) {
@@ -416,6 +463,7 @@ module.exports = {
         detectDatacard,
         getSectionIndex,
         hasShapeSection,
-        calculateAdjustedSection
+        calculateAdjustedSection,
+        keywordDefinitions
     }
 };

@@ -171,4 +171,46 @@ suite('Combine Datacard Extension Tests', () => {
         adjustedSection = extension._testing.calculateAdjustedSection(result, extension._testing.hasShapeSection(mockDoc));
         assert.strictEqual(adjustedSection, 4, 'Systematics section should have adjusted section 4');
     });
+
+    test('Every keyword should have a definition and vice versa', () => {
+        // Setup needed to access the keywords array
+        const grammarPath = path.join(__dirname, '..', '..', '..', 'syntaxes', 'combine-datacard.tmLanguage.json');
+        let keywords = [];
+        
+        try {
+            const grammar = JSON.parse(fs.readFileSync(grammarPath, 'utf8'));
+            const keywordPattern = grammar.patterns.find(pattern => pattern.name === "keyword.combine-datacard");
+            if (keywordPattern && keywordPattern.match) {
+                const keywordRegex = /(?:\(|\|)(\w+)(?=\||\))/g;
+                let match;
+                while ((match = keywordRegex.exec(keywordPattern.match)) !== null) {
+                    keywords.push(match[1]);
+                }
+            }
+            
+            // Get the keyword definitions
+            const keywordDefinitions = extension._testing.keywordDefinitions;
+            
+            // Check that every keyword has a definition
+            keywords.forEach(keyword => {
+                assert.strictEqual(
+                    keyword in keywordDefinitions,
+                    true,
+                    `Keyword '${keyword}' should have a definition`
+                );
+            });
+            
+            // Check that every definition has a corresponding keyword
+            Object.keys(keywordDefinitions).forEach(definedKeyword => {
+                assert.strictEqual(
+                    keywords.includes(definedKeyword),
+                    true,
+                    `Definition for '${definedKeyword}' should correspond to a keyword`
+                );
+            });
+            
+        } catch (error) {
+            assert.fail(`Test failed to read grammar file: ${error.message}`);
+        }
+    });
 });

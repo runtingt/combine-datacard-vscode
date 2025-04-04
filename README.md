@@ -18,9 +18,12 @@
 
     ![1742490518036](images/datacard_suggestions.gif)
 
+- Tooltips for keywords
+
+    ![1742490518036](images/datacard_tooltips.gif)
+
 ## Coming soon 🔜
 
-- Tooltips for keywords
 - Breadcrumbs for datacard sections
 - Auto-aligning table columns
 - Sticky scrolling for table headings
