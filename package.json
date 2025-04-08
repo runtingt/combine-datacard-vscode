@@ -27,7 +27,11 @@
                     "CombineDatacard",
                     "combine-datacard"
                 ],
-                "configuration": "./language_configuration.json"
+                "configuration": "./language_configuration.json",
+                "icon": {
+                    "light": "./images/logo.png",
+                    "dark": "./images/logo.png"
+                }
             }
         ],
         "grammars": [
