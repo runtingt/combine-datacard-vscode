@@ -170,6 +170,13 @@ function activate(context) {
         })
     );
 
+    // Register the document symbol provider for outline view and breadcrumbs
+    context.subscriptions.push(
+        vscode.languages.registerDocumentSymbolProvider(
+            { language: 'combine-datacard' },
+            new CombineDocumentSymbolProvider()
+        )
+    );
 }
 
 function hasShapeSection(document) {
@@ -451,6 +458,145 @@ class CombineCompletionItemProvider {
         }
 
         return completions;
+    }
+}
+
+class CombineDocumentSymbolProvider {
+    provideDocumentSymbols(document, token) {
+        const symbols = [];
+        const dashLineRegex = /^-{3,}$/;
+        const dashLineNumbers = [];
+        const hasShape = hasShapeSection(document);
+        
+        // Find all section dividers
+        for (let i = 0; i < document.lineCount; i++) {
+            const lineText = document.lineAt(i).text.trim();
+            if (dashLineRegex.test(lineText)) {
+                dashLineNumbers.push(i);
+            }
+        }
+        
+        // Create symbols for each section
+        if (dashLineNumbers.length > 0) {
+            // Handle content before first divider as a section
+            if (dashLineNumbers[0] > 0) {
+                const preHeaderRange = new vscode.Range(0, 0, dashLineNumbers[0] - 1, document.lineAt(dashLineNumbers[0] - 1).text.length);
+                let isHeader = false;
+                
+                // Check if this section contains the header block (imax/jmax/kmax)
+                for (let i = 0; i <= Math.min(dashLineNumbers[0] - 3, document.lineCount - 3); i++) {
+                    if (document.lineAt(i).text.trim().startsWith('imax') && 
+                        document.lineAt(i+1).text.trim().startsWith('jmax') && 
+                        document.lineAt(i+2).text.trim().startsWith('kmax')) {
+                        isHeader = true;
+                        break;
+                    }
+                }
+                
+                symbols.push(new vscode.DocumentSymbol(
+                    isHeader ? "Header section" : "Pre-header section", 
+                    "", 
+                    vscode.SymbolKind.String, 
+                    preHeaderRange, 
+                    preHeaderRange
+                ));
+            }
+            
+            // Handle sections between dividers
+            for (let i = 0; i < dashLineNumbers.length - 1; i++) {
+                const startLine = dashLineNumbers[i] + 1;
+                const endLine = dashLineNumbers[i + 1] - 1;
+                
+                if (endLine >= startLine) {
+                    const sectionRange = new vscode.Range(startLine, 0, endLine, document.lineAt(endLine).text.length);
+                    const sectionInfo = getSectionIndex(document, startLine);
+                    const adjustedSection = calculateAdjustedSection(sectionInfo, hasShape);
+                    
+                    // Get section name using the same logic as CombineCompletionItemProvider
+                    let sectionName = "Other section";
+                    switch (adjustedSection) {
+                        case -1:
+                            sectionName = "Pre-header section";
+                            break;
+                        case 0:
+                            sectionName = "Header section";
+                            break;
+                        case 1:
+                            sectionName = "Shapes section";
+                            break;
+                        case 2:
+                            sectionName = "Channel definition section";
+                            break;
+                        case 3:
+                            sectionName = "Process definition section";
+                            break;
+                        case 4:
+                            sectionName = "Systematics section";
+                            break;
+                    }
+                    
+                    symbols.push(new vscode.DocumentSymbol(
+                        sectionName,
+                        "",
+                        vscode.SymbolKind.Struct,
+                        sectionRange,
+                        sectionRange
+                    ));
+                }
+            }
+            
+            // Handle content after last divider
+            if (dashLineNumbers[dashLineNumbers.length - 1] < document.lineCount - 1) {
+                const startLine = dashLineNumbers[dashLineNumbers.length - 1] + 1;
+                const endLine = document.lineCount - 1;
+                const sectionRange = new vscode.Range(startLine, 0, endLine, document.lineAt(endLine).text.length);
+                const sectionInfo = getSectionIndex(document, startLine);
+                const adjustedSection = calculateAdjustedSection(sectionInfo, hasShape);
+                
+                // Get section name using the same logic as CombineCompletionItemProvider
+                let sectionName = "Other section";
+                switch (adjustedSection) {
+                    case -1:
+                        sectionName = "Pre-header section";
+                        break;
+                    case 0:
+                        sectionName = "Header section";
+                        break;
+                    case 1:
+                        sectionName = "Shapes section";
+                        break;
+                    case 2:
+                        sectionName = "Channel definition section";
+                        break;
+                    case 3:
+                        sectionName = "Process definition section";
+                        break;
+                    case 4:
+                        sectionName = "Systematics section";
+                        break;
+                }
+                
+                symbols.push(new vscode.DocumentSymbol(
+                    sectionName,
+                    "",
+                    vscode.SymbolKind.Struct,
+                    sectionRange,
+                    sectionRange
+                ));
+            }
+        } else {
+            // If no dividers, treat the whole document as one section
+            const docRange = new vscode.Range(0, 0, document.lineCount - 1, document.lineAt(document.lineCount - 1).text.length);
+            symbols.push(new vscode.DocumentSymbol(
+                "Datacard", 
+                "", 
+                vscode.SymbolKind.File, 
+                docRange, 
+                docRange
+            ));
+        }
+        
+        return symbols;
     }
 }
 
