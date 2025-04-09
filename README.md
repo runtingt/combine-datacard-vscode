@@ -22,6 +22,10 @@
 
     ![1742490518036](images/datacard_tooltips.gif)
 
+- Breadcrumbs for datacard sections
+
+    ![1742490518036](images/datacard_outline.png)
+
 ## Coming soon 🔜
 
 - Breadcrumbs for datacard sections

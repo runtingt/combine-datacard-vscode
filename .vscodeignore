@@ -2,3 +2,6 @@
 .env
 README.md
 .mypy_cache
+.github
+src/test
+.vscode
