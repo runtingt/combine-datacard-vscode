@@ -28,7 +28,6 @@
 
 ## Coming soon 🔜
 
-- Breadcrumbs for datacard sections
 - Auto-aligning table columns
 - Sticky scrolling for table headings
 <!-- - Use the CombineHarvester `ValidateDatacards.py` tool to validate datacards on-the-fly -->

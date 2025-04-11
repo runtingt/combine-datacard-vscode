@@ -1,6 +1,7 @@
 const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
+const { assert } = require('console');
 
 let keywords = [];
 function loadKeywords(context) {
@@ -72,6 +73,36 @@ function detectDatacard(document) {
 function activate(context) {
     console.log('CombineDatacard extension activated');
     loadKeywords(context);
+
+    // Register the align columns command
+    const alignColumnsCommand = vscode.commands.registerCommand('combine-datacard.alignColumns', async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (editor && (editor.document.languageId === 'combine-datacard' || 
+                      (editor.document.languageId === 'plaintext' && editor.document.fileName.endsWith('.txt')))) {
+            try {
+                vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: "Aligning datacard columns...",
+                    cancellable: false
+                }, async (progress) => {
+                    progress.report({ increment: 0 });
+                    const success = await alignDatacardColumns(editor.document);
+                    progress.report({ increment: 100 });
+                    if (success) {
+                        vscode.window.showInformationMessage('Datacard columns aligned successfully');
+                    } else {
+                        vscode.window.showErrorMessage('Failed to align datacard columns');
+                    }
+                });
+            } catch (error) {
+                vscode.window.showErrorMessage(`Error aligning columns: ${error.message}`);
+            }
+        } else {
+            vscode.window.showWarningMessage('Align columns command only works with datacard files');
+        }
+    });
+    
+    context.subscriptions.push(alignColumnsCommand);
 
     // Listen for opened text documents
     vscode.workspace.onDidOpenTextDocument(document => {
@@ -602,6 +633,164 @@ class CombineDocumentSymbolProvider {
 
 function deactivate() {}
 
+/**
+ * Function to align the columns in a datacard
+ * @param {vscode.TextDocument} document The datacard document to align
+ * @returns {Promise<boolean>} Whether alignment was successful
+ */
+async function alignDatacardColumns(document) {
+    try {
+        // Find the process and systematics sections
+        processSectionID = 3
+        systematicsSectionID = 4
+        const hasShape = hasShapeSection(document)
+        
+        // Get the line numbers which correspond to the sections
+        lines = document.getText().split('\n');
+        let processSectionStart = -1;
+        let processSectionEnd = -1;
+        let systematicsSectionStart = -1;
+        let systematicsSectionEnd = -1;
+        let id = -1;
+        for (let i = 0; i < lines.length; i++) {
+            id = calculateAdjustedSection(getSectionIndex(document, i), hasShape);
+            // Skip line if it is blank or a section separator
+            if (lines[i].trim().length === 0 || lines[i].trim().startsWith('---')) {
+                continue;
+            }
+
+            // Process section identification
+            if (id === processSectionID) {
+                if (processSectionStart === -1) {
+                    processSectionStart = i;
+                }
+                processSectionEnd = i;
+            }
+
+            // Systematics section identification
+            if (id === systematicsSectionID) {
+                if (systematicsSectionStart === -1) {
+                    systematicsSectionStart = i;
+                }
+                systematicsSectionEnd = i;
+            }
+        }
+        console.log('Process section:', processSectionStart, processSectionEnd);
+        console.log('Systematics section:', systematicsSectionStart, systematicsSectionEnd);
+        
+        // Get the columns, their current start points and the maximum length
+        let binProcessColumns = [];
+        let i = processSectionStart;
+        assert(systematicsSectionEnd > processSectionEnd, 'Systematics section should be after process section');
+        while (i <= systematicsSectionEnd) {
+            if (i > lines.length) {
+                console.error('Reached end of lines while processing sections');
+                break;
+            }
+            if (i > processSectionEnd && i < systematicsSectionStart) {
+                i++;
+                continue; // Skip blank lines or lines outside the sections
+            }
+            const line = lines[i].trim();
+            if (line.length > 0) {
+                // Get the index of the first non-whitespace character in each column
+                const columns = [];
+                const columnRegex = /(\S+)/g;
+                let match;
+                while ((match = columnRegex.exec(line)) !== null) {
+                    const columnStart = match.index;
+                    const columnEnd = columnStart + match[0].length;
+                    columns.push([columnStart, columnEnd]);
+                }
+                if (i >= systematicsSectionStart && i <= systematicsSectionEnd) {
+                    // Merge the first two columns
+                    const firstColumn = columns[0];
+                    const secondColumn = columns[1];
+                    const mergedColumn = [firstColumn[0], secondColumn[1]];
+                    columns.splice(0, 2, mergedColumn);
+                }
+                binProcessColumns.push(columns);
+            }
+            i++;
+        }
+        // Find the maximum length of each column
+        const maxColumnLengths = [];
+        for (const columns of binProcessColumns) {
+            for (let j = 0; j < columns.length; j++) {
+                const columnLength = columns[j][1] - columns[j][0];
+                if (!maxColumnLengths[j] || columnLength > maxColumnLengths[j]) {
+                    maxColumnLengths[j] = columnLength + 3; // Add padding
+                }
+            }
+        }
+
+        // Calculate the new start points for each column
+        const newColumnStarts = [];
+        for (let j = 0; j < maxColumnLengths.length; j++) {
+            const columnStart = j === 0 ? 0 : newColumnStarts[j - 1] + maxColumnLengths[j - 1];
+            newColumnStarts.push(columnStart);
+        }
+
+        // Per row, calculate the required padding
+        const newLines = [];
+        i = processSectionStart;
+        let linesSeen = 0;
+        while (i <= systematicsSectionEnd) {
+            if (i > lines.length) {
+                console.error('Reached end of lines while processing sections');
+                break;
+            }
+            const line = lines[i].trim();
+            if ((i >= processSectionStart && i <= processSectionEnd) || 
+                (i >= systematicsSectionStart && i <= systematicsSectionEnd)) {
+                if (line.length > 0) {
+                    console.log('Processing line:', line);
+                    const columns = binProcessColumns[linesSeen];
+                    let newLine = '';
+                    
+                    for (let j = 0; j < columns.length; j++) {
+                        const columnStart = columns[j][0];
+                        const columnEnd = columns[j][1];
+                        const columnText = line.substring(columnStart, columnEnd);
+                        
+                        // Calculate padding needed before this column
+                        const paddingNeeded = Math.max(0, newColumnStarts[j] - newLine.length);
+                        newLine += ' '.repeat(paddingNeeded) + columnText;
+                    }
+                    
+                    newLines.push(newLine);
+                    linesSeen++;
+                } else {
+                    newLines.push(line);
+                }
+            } else {
+                newLines.push(lines[i]); // Keep original line for lines outside our sections
+            }
+            i++;
+            // TODO: Fix the last line of the section
+            // TODO: Spacing on `lnN` terms etc
+            // TODO: Also align bin definition section
+
+        }
+        
+        // Write the new lines back to the document
+        const edit = new vscode.WorkspaceEdit();
+        const range = new vscode.Range(
+            new vscode.Position(processSectionStart, 0),
+            new vscode.Position(systematicsSectionEnd + 1, 0)
+        );
+        edit.replace(document.uri, range, newLines.join('\n'));
+        await vscode.workspace.applyEdit(edit);
+        console.log('Applied edit to document');
+        return true;
+
+    } catch (error) {
+        console.error('Error aligning datacard columns:', error);
+        vscode.window.showErrorMessage('Error aligning datacard columns: ' + error.message);
+        return false;
+    }
+}
+
 module.exports = {
     activate,
     deactivate,
@@ -610,6 +799,7 @@ module.exports = {
         getSectionIndex,
         hasShapeSection,
         calculateAdjustedSection,
-        keywordDefinitions
+        keywordDefinitions,
+        alignDatacardColumns
     }
 };

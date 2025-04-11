@@ -40,7 +40,24 @@
                 "scopeName": "source.combine-datacard",
                 "path": "./syntaxes/combine-datacard.tmLanguage.json"
             }
-        ]
+        ],
+        "commands": [
+            {
+                "command": "combine-datacard.alignColumns",
+                "title": "Align Datacard Columns",
+                "category": "Datacard",
+                "when": "editorLangId == 'combine-datacard' || (editorLangId == 'plaintext' && resourceExtname == '.txt')"
+            }
+        ],
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "combine-datacard.alignColumns",
+                    "when": "editorLangId == 'combine-datacard'",
+                    "group": "1_modification"
+                }
+            ]
+        }
     },
     "scripts": {
         "test": "node ./src/test/runTest.js"
